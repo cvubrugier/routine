@@ -10,6 +10,7 @@ homepage = "https://github.com/cvubrugier/routine"
 repository = "https://github.com/cvubrugier/routine.git"
 
 [dependencies]
+getopts = "0.2.11"
 time = "0.1"
 piston = "0.1.4"
 piston_window = "0.1.0"

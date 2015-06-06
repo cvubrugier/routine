@@ -5,6 +5,7 @@
 // SPDX-License-Identifier:	MIT
 //
 
+extern crate getopts;
 extern crate time;
 extern crate piston;
 extern crate graphics;
@@ -12,9 +13,11 @@ extern crate piston_window;
 extern crate glutin_window;
 extern crate gfx_graphics;
 
+use getopts::Options;
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::path::Path;
+use std::rc::Rc;
+use std::str::FromStr;
 use time::{ Duration, SteadyTime };
 
 use piston::window::WindowSettings;
@@ -43,6 +46,84 @@ struct Step {
 
 const NR_STEPS: usize = 3;
 
+#[derive(Debug)]
+enum ParseError {
+    HelpArgument,
+    InvalidArgument,
+    InvalidFormat,
+}
+
+struct Settings {
+    prep_duration: Duration,
+    work_duration: Duration,
+    rest_duration: Duration,
+}
+
+impl Settings {
+
+    fn new(prep_seconds: i64,
+           work_seconds: i64,
+           rest_seconds: i64) -> Settings {
+        Settings {
+            prep_duration: Duration::seconds(prep_seconds),
+            work_duration: Duration::seconds(work_seconds),
+            rest_duration: Duration::seconds(rest_seconds),
+        }
+    }
+
+    fn set_from_cmdline(&mut self) -> Result<(), ParseError> {
+        let args: Vec<String> = std::env::args().collect();
+
+        let mut opts = Options::new();
+        opts.optflag("h", "help", "display this help and exit");
+        opts.optopt("p", "prep", "set the preparation time to NUMBER seconds", "NUMBER");
+        opts.optopt("w", "work", "set the workout time to NUMBER seconds", "NUMBER");
+        opts.optopt("r", "rest", "set the rest time to NUMBER seconds", "NUMBER");
+
+        let matches = match opts.parse(&args[1..]) {
+            Ok(m) => { m }
+            Err(_) => { return Err(ParseError::InvalidArgument) }
+        };
+
+        if matches.opt_present("h") {
+            let brief = format!("Usage: {} [options]", args[0]);
+            print!("{}", opts.usage(&brief));
+            return Err(ParseError::HelpArgument);
+        };
+
+        for arg in vec!["p", "w", "r"] {
+            match self.set_arg(&matches, arg) {
+                Ok(_) => {},
+                Err(e) => { return Err(e) },
+            }
+        }
+        Ok(())
+    }
+
+    fn set_arg(&mut self,
+               matches: &getopts::Matches,
+               arg: &str) -> Result<(), ParseError> {
+        match matches.opt_str(arg) {
+            Some(argval) => {
+                match i64::from_str(&*argval) {
+                    Ok(v) => {
+                        match arg {
+                            "p" => { self.prep_duration = Duration::seconds(v) },
+                            "w" => { self.work_duration = Duration::seconds(v) },
+                            "r" => { self.rest_duration = Duration::seconds(v) },
+                            _ => { unreachable!() }
+                        }
+                        Ok(())
+                    },
+                    Err(_) => Err(ParseError::InvalidFormat),
+                }
+            },
+            None => Ok(()),
+        }
+    }
+
+}
+
 struct App {
     steps: [Step; NR_STEPS],
     step_idx: usize,
@@ -51,30 +132,30 @@ struct App {
 }
 
 impl App {
-    fn new(prep: i64, work: i64, rest: i64) -> App {
+    fn new(settings: &Settings) -> App {
         App {
             steps: [
                 Step {
                     id: StepId::Prep,
                     name: "Prepare".to_string(),
                     color: BLUE,
-                    duration: Duration::seconds(prep),
+                    duration: settings.prep_duration,
                 },
                 Step {
                     id: StepId::Work,
                     name: "Work".to_string(),
                     color: RED,
-                    duration: Duration::seconds(work),
+                    duration: settings.work_duration,
                 },
                 Step {
                     id: StepId::Rest,
                     name: "Rest".to_string(),
                     color: GREEN,
-                    duration: Duration::seconds(rest),
+                    duration: settings.rest_duration,
                 },
             ],
             step_idx: 0,
-            expiration: SteadyTime::now() + Duration::seconds(prep),
+            expiration: SteadyTime::now() + settings.prep_duration,
             round_nr: 1,
         }
     }
@@ -119,8 +200,25 @@ fn main() {
          )
     ));
 
+    let mut settings = Settings::new(10, 30, 30);
+    if let Err(e) = settings.set_from_cmdline() {
+        match e {
+            ParseError::InvalidArgument => {
+                println!("Error: invalid argument.");
+                std::process::exit(1);
+            }
+            ParseError::InvalidFormat => {
+                println!("Error: invalid argument format.");
+                std::process::exit(1);
+            }
+            ParseError::HelpArgument => {
+                return;
+            }
+        }
+    }
+
     let app = Rc::new(RefCell::new(
-        App::new(3, 10, 10)
+        App::new(&settings)
     ));
 
     let events = PistonWindow::new(glutin_window, app);
