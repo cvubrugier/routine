@@ -11,7 +11,6 @@ extern crate piston;
 extern crate graphics;
 extern crate piston_window;
 extern crate glutin_window;
-extern crate gfx_graphics;
 
 use getopts::Options;
 use std::cell::RefCell;
@@ -20,10 +19,8 @@ use std::rc::Rc;
 use std::str::FromStr;
 use time::{ Duration, SteadyTime };
 
-use piston::window::WindowSettings;
 use piston_window::*;
-use gfx_graphics::GlyphCache;
-use glutin_window::{ GlutinWindow, OpenGL };
+use glutin_window::GlutinWindow;
 
 type Color = [f32; 4];
 const RED:   Color = [0.8, 0.0, 0.0, 1.0];
@@ -194,7 +191,6 @@ impl App {
 fn main() {
     let glutin_window = Rc::new(RefCell::new(
         GlutinWindow::new(
-            OpenGL::_3_2,
             WindowSettings::new("Routine", [640, 480])
                 .exit_on_esc(true)
          )
@@ -224,7 +220,7 @@ fn main() {
     let events = PistonWindow::new(glutin_window, app);
     let ref font = Path::new("assets/fonts/FiraMono-Medium.ttf");
     let factory = events.factory.borrow().clone();
-    let mut glyph_cache = GlyphCache::new(font, factory).unwrap();
+    let mut glyphs = Glyphs::new(font, factory).unwrap();
 
     for e in events {
         let mut a = e.app.borrow_mut();
@@ -243,7 +239,7 @@ fn main() {
 
             text::Text::colored(WHITE, 40).draw(
                 &*label,
-                &mut glyph_cache,
+                &mut glyphs,
                 &c.draw_state,
                 c.transform.trans(70.0, 150.0),
                 g
@@ -251,7 +247,7 @@ fn main() {
 
             text::Text::colored(WHITE, 120).draw(
                 &*time_remaining,
-                &mut glyph_cache,
+                &mut glyphs,
                 &c.draw_state,
                 c.transform.trans(60.0, 300.0),
                 g
