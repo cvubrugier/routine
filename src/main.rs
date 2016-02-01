@@ -1,4 +1,3 @@
-//
 // (C) Copyright 2015
 // Christophe Vu-Brugier <cvubrugier@fastmail.fm>
 //
@@ -15,7 +14,7 @@ use piston_window::WindowSettings;
 use piston::input::RenderEvent;
 use piston::event_loop::*;
 use glutin_window::GlutinWindow as Window;
-use opengl_graphics::{ GlGraphics, OpenGL };
+use opengl_graphics::{GlGraphics, OpenGL};
 use opengl_graphics::glyph_cache::GlyphCache;
 use std::path::Path;
 
@@ -24,14 +23,11 @@ mod settings;
 
 fn main() {
     let opengl = OpenGL::V3_2;
-    let mut window: Window = WindowSettings::new(
-        "Routine",
-        [640, 480]
-        )
-        .opengl(opengl)
-        .exit_on_esc(true)
-        .build()
-        .unwrap();
+    let mut window: Window = WindowSettings::new("Routine", [640, 480])
+                                 .opengl(opengl)
+                                 .exit_on_esc(true)
+                                 .build()
+                                 .unwrap();
     // Must be declared after the window is created
     let ref mut gl = GlGraphics::new(opengl);
 

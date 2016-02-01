@@ -1,4 +1,3 @@
-//
 // (C) Copyright 2016
 // Christophe Vu-Brugier <cvubrugier@fastmail.fm>
 //
@@ -15,9 +14,9 @@ use opengl_graphics::glyph_cache::GlyphCache;
 use self::time::{Duration, SteadyTime};
 use settings;
 
-const RED:   Color = [0.8, 0.0, 0.0, 1.0];
+const RED: Color = [0.8, 0.0, 0.0, 1.0];
 const GREEN: Color = [0.0, 0.8, 0.0, 1.0];
-const BLUE:  Color = [0.0, 0.0, 0.8, 1.0];
+const BLUE: Color = [0.0, 0.0, 0.8, 1.0];
 const WHITE: Color = [1.0, 1.0, 1.0, 1.0];
 
 enum StepId {
@@ -45,26 +44,24 @@ pub struct App {
 impl App {
     pub fn new(settings: settings::Settings) -> App {
         App {
-            steps: [
-                Step {
-                    id: StepId::Prep,
-                    name: "Prepare".to_string(),
-                    color: BLUE,
-                    duration: settings.prep_duration,
-                },
-                Step {
-                    id: StepId::Work,
-                    name: "Work".to_string(),
-                    color: RED,
-                    duration: settings.work_duration,
-                },
-                Step {
-                    id: StepId::Rest,
-                    name: "Rest".to_string(),
-                    color: GREEN,
-                    duration: settings.rest_duration,
-                },
-            ],
+            steps: [Step {
+                        id: StepId::Prep,
+                        name: "Prepare".to_string(),
+                        color: BLUE,
+                        duration: settings.prep_duration,
+                    },
+                    Step {
+                        id: StepId::Work,
+                        name: "Work".to_string(),
+                        color: RED,
+                        duration: settings.work_duration,
+                    },
+                    Step {
+                        id: StepId::Rest,
+                        name: "Rest".to_string(),
+                        color: GREEN,
+                        duration: settings.rest_duration,
+                    }],
             step_idx: 0,
             expiration: SteadyTime::now() + settings.prep_duration,
             round_nr: 1,
@@ -101,10 +98,7 @@ impl App {
         (self.round_nr, &self.steps[self.step_idx], remaining)
     }
 
-    pub fn on_render(&mut self,
-                     args: &RenderArgs,
-                     gl: &mut GlGraphics,
-                     cache: &mut GlyphCache) {
+    pub fn on_render(&mut self, args: &RenderArgs, gl: &mut GlGraphics, cache: &mut GlyphCache) {
         let (round_nr, step, remaining) = self.tick();
 
         gl.draw(args.viewport(), |c, g| {
@@ -118,22 +112,18 @@ impl App {
             clear(step.color, g);
 
             let text_label = graphics::Text::new_color(WHITE, 40);
-            text_label.draw(
-                &*label,
-                cache,
-                &c.draw_state,
-                c.transform.trans(70.0, 150.0),
-                g
-            );
+            text_label.draw(&*label,
+                            cache,
+                            &c.draw_state,
+                            c.transform.trans(70.0, 150.0),
+                            g);
 
             let text_timer = graphics::Text::new_color(WHITE, 120);
-            text_timer.draw(
-                &*time_remaining,
-                cache,
-                &c.draw_state,
-                c.transform.trans(60.0, 300.0),
-                g
-            );
+            text_timer.draw(&*time_remaining,
+                            cache,
+                            &c.draw_state,
+                            c.transform.trans(60.0, 300.0),
+                            g);
         });
     }
 }
